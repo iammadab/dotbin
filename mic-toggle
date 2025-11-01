@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Toggle microphone mute status
+
+# check the current mute state
+MUTED=$(pactl get-source-mute @DEFAULT_SOURCE@ | awk '{print $2}')
+
+if [ "$MUTED" = "yes" ]; then
+  pactl set-source-mute @DEFAULT_SOURCE@ "no"
+  makoctl dismiss -g app-name=mic-toggle
+else
+  pactl set-source-mute @DEFAULT_SOURCE@ "yes"
+  notify-send -a mic-toggle -t 0 ""
+fi
+
+# mako style config
+# [app-name=mic-toggle]
+# width=20
+# anchor=bottom-right
+# background-color=#eb0e11
+# border-size=0
+# border-radius=10
