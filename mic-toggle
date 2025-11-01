@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Toggle microphone mute status
+
+# check the current mute state
+MUTED=$(pactl get-source-mute @DEFAULT_SOURCE@ | awk '{print $2}')
+
+if [ "$MUTED" = "yes" ]; then
+  pactl set-source-mute @DEFAULT_SOURCE@ "no"
+else
+  pactl set-source-mute @DEFAULT_SOURCE@ "yes"
+fi
