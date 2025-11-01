@@ -7,9 +7,10 @@ MUTED=$(pactl get-source-mute @DEFAULT_SOURCE@ | awk '{print $2}')
 
 if [ "$MUTED" = "yes" ]; then
   pactl set-source-mute @DEFAULT_SOURCE@ "no"
+  makoctl dismiss -g app-name=mic-toggle
 else
   pactl set-source-mute @DEFAULT_SOURCE@ "yes"
-  notify-send -a mic-toggle ""
+  notify-send -a mic-toggle -t 0 ""
 fi
 
 # mako style config
