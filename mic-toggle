@@ -9,4 +9,14 @@ if [ "$MUTED" = "yes" ]; then
   pactl set-source-mute @DEFAULT_SOURCE@ "no"
 else
   pactl set-source-mute @DEFAULT_SOURCE@ "yes"
+  notify-send -a mic-toggle ""
 fi
+
+
+# mako style config
+# [app-name=mic-toggle]
+# width=20
+# anchor=bottom-right
+# background-color=#eb0e11
+# border-size=0
+# border-radius=10
