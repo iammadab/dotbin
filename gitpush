@@ -2,15 +2,7 @@
 set -euo pipefail
 
 branch=$(git branch --show-current)
-echo "$(branch)"
-
-# ensure this is a git repository
 git status
-
-# stage and commit everything
 git add .
-git commit -m "$(tagdate automated_commit_{{date}}_{{time}})"
-
-
-# push to the current branch
-git push origin "$(branch)"
+git commit -am "$(tagdate automated_commit_{{date}}_{{time}})"
+git push origin "$branch"
