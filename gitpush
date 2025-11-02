@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
+
+msg=$(tagdate automated_commit_{{date}}_{{time}})
+
+if [[ $# -gt 0 ]]; then
+  msg="$*"
+fi
 
 branch=$(git branch --show-current)
 git status
 git add .
-git commit -am "$(tagdate automated_commit_{{date}}_{{time}})"
+git commit -am "$msg"
 git push origin "$branch"
