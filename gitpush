@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+branch="$(git branch --show-current)"
+
+# ensure this is a git repository
+git status
+
+# stage and commit everything
+git add .
+git commit -m "$(tagdate automated_commit_{{date}}_{{time}})"
+
+# push to the current branch
+git push origin "$(branch)"
