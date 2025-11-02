@@ -10,5 +10,7 @@ git status
 git add .
 git commit -m "$(tagdate automated_commit_{{date}}_{{time}})"
 
+echo "$(branch)"
+
 # push to the current branch
 git push origin "$(branch)"
