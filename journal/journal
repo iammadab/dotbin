@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+template_file="/home/dab/dotbin/journal/prompt.template"
+output_folder="/home/dab/Documents/journal"
+output_file=$(tagdate "entry_{{date}}.txt")
+output_path="$output_folder/$output_file"
+
+# ensure the template file exists
+[[ -f "$template_file" ]] || { echo "Template file not found: $template_file"; exit 1; }
+
+# ensure the output folder exists
+mkdir -p "$output_folder"
+
+# ensure we don't have an entry for today already
+if [[ -e "$output_path" ]]; then 
+  echo "already have a journal entry for today"
+  exit 0
+else 
+  # copy the template content into the output file
+  cp "$template_file" "$output_path"
+fi
+
+# open in vim
+nvim "$output_folder/$output_file"
