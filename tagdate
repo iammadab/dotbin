@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# -e will exit immediately if a command fails
+# -u will treat unset variables as an error
+# `-o pipefail` the whole pipeline fails if any command fails
+set -euo pipefail
+
+date_str=$(date +%F)
+time_str=$(date +%T)
+
+# if the number of command arguments is greater than 0
+if [ $# -gt 0 ]; then 
+  inputs=("$@")
+else
+  mapfile -t inputs
+fi
+
+# use sed to replace {{date}} and {{time}} with date_str and time_str
+echo "${inputs[0]}" | sed -e "s/{{date}}/${date_str}/g" -e "s/{{time}}/${time_str}/g"
