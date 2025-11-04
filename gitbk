@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # check if GITBACKUP_CONFIG is already set
@@ -7,6 +7,62 @@ CONFIG="${GITBACKUP_CONFIG:-$HOME/.config/gitbackup/config.ini}"
 SECTION="repos"
 
 ensure_config(){
-  mkdir -p "$(dirname "$config")"
-  touch "$config"
+  mkdir -p "$(dirname "$CONFIG")"
+  touch "$CONFIG"
 }
+
+case "${1:-}" in 
+  # gitbk add <path>
+  # adds a directory to the list of repos to backup
+  add)
+    path="${2:?Usage: gitbk add <path>}"
+    ensure_config
+    name="$(basename "$(realpath "$path")")"
+    crudini --set "$CONFIG" "$SECTION" "$name" "$(realpath "$path")"
+    echo "Added $name -> $(realpath "$path")"
+    ;;
+
+  # gitbk list
+  # lists all the repositories that are currently being backed-up
+  list)
+    ensure_config
+    if crudini --get "$CONFIG" "$SECTION" >/dev/null 2>&1; then
+      crudini --get "$CONFIG" "$SECTION" | nl -ba
+    else
+      echo "(no repos configured)"
+    fi
+    ;;
+
+  # gitbk rm <name> or gitbk del <name>
+  # stops backing up a given directory
+  rm|del)
+    path="${2:?Usage: gitbk rm <name>}"
+    ensure_config
+    # try to remove by name
+    if crudini --get "$CONFIG" "$SECTION" "$(basename "$path")" >/dev/null 2>&1; then
+      crudini --del "$CONFIG" "$SECTION" "$(basename "$path")"
+      echo "Removed $(basename "$path")"
+    else
+      echo "cannot remove (not found)"
+    fi
+    ;;
+
+  # gitbk run
+  # backups all repositories
+  run)
+    ensure_config
+    if crudini --get "$CONFIG" "$SECTION" >/dev/null 2>&1; then
+      crudini --get "$CONFIG" "$SECTION" | while IFS='=' read -r name path; do
+        echo "==> $name ($path)"
+        gitpush -C "$path" || echo " (failed for $name)"
+      done
+    else
+      echo "(no repos configured)"
+    fi
+    ;;
+
+  # fallback
+  *)
+    echo "Usage: gitbk <add|list|del|rm|run> [args]"
+    ;;
+esac
