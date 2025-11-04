@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+set -euo pipefail
+
+# check if GITBACKUP_CONFIG is already set
+# if not fall back to the given default
+CONFIG="${GITBACKUP_CONFIG:-$HOME/.config/gitbackup/config.ini}"
+SECTION="repos"
+
+ensure_config(){
+  mkdir -p "$(dirname "$config")"
+  touch "$config"
+}
