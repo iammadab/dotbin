@@ -33,9 +33,9 @@ case "${1:-}" in
     fi
     ;;
 
-  # gitbk rm <name> or gitbk del <name>
+  # gitbk <rm|del|delete|remove> <name>
   # stops backing up a given directory
-  rm|del)
+  rm|remove|delete|del)
     path="${2:?Usage: gitbk rm <name>}"
     ensure_config
     # try to remove by name
