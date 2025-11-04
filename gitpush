@@ -3,13 +3,25 @@
 set -euo pipefail
 
 msg=$(tagdate automated_commit_{{date}}_{{time}})
+repo_path="."
 
-if [[ $# -gt 0 ]]; then
-  msg="$*"
-fi
 
-branch=$(git branch --show-current)
-git status
-git add .
-git commit -am "$msg"
-git push origin "$branch"
+while [[ $# -gt 0 ]]; do 
+  case "$1" in
+    -m)
+      shift
+      msg="$1"
+      ;;
+    -C)
+      shift
+      repo_path="$1"
+      ;;
+  esac
+  shift
+done
+
+branch=$(git -C "$repo_path" branch --show-current)
+git -C "$repo_path" status
+git -C "$repo_path" add .
+git -C "$repo_path" commit -am "$msg"
+git -C "$repo_path" push origin "$branch"
