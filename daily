@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+stamp_dir="$HOME/.local/share/focuslock"
+stamp_file="$stamp_dir/daily_last_run"
+log_file="$stamp_dir/daily.log"
+today="$(date +%F)"
+
+mkdir -p "$stamp_dir"
+
+if [[ -f "$stamp_file" ]]; then
+    last_run="$(cat "$stamp_file")"
+    if [[ "$last_run" == "$today" ]]; then
+        exit 0
+    fi
+fi
+
+focuslock --app-cmd 'foliate' --minutes 30
+focuslock --app-cmd 'obsidian' --minutes 30
+
+printf '%s ran daily\n' "$today" >> "$log_file"
+printf '%s\n' "$today" > "$stamp_file"
