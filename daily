@@ -5,7 +5,13 @@ set -euo pipefail
 stamp_dir="$HOME/.local/share/focuslock"
 stamp_file="$stamp_dir/daily_last_run"
 log_file="$stamp_dir/daily.log"
+server_log_file="$stamp_dir/daily_server.log"
 today="$(date +%F)"
+project_dir="$HOME/Documents/projects/2026/placeholder"
+workout_minutes=25
+shower_minutes=15
+foliate_minutes=60
+obsidian_minutes=60
 
 mkdir -p "$stamp_dir"
 
@@ -20,8 +26,36 @@ if [[ -f "$stamp_file" ]]; then
     fi
 fi
 
-focuslock --app-cmd 'foliate' --minutes 60
-focuslock --app-cmd 'obsidian' --minutes 60
+(
+    cd "$project_dir"
+    cargo run
+) >>"$server_log_file" 2>&1 &
+server_pid=$!
+cleanup() {
+    if kill -0 "$server_pid" 2>/dev/null; then
+        kill "$server_pid"
+        wait "$server_pid" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
+
+for _ in {1..30}; do
+    if curl -fs "http://localhost:3000/" >/dev/null; then
+        break
+    fi
+    sleep 0.2
+done
+
+if ! curl -fs "http://localhost:3000/" >/dev/null; then
+    printf '%s server failed to start\n' "$today" >> "$log_file"
+    exit 1
+fi
+
+focuslock --url "http://localhost:3000/?text=Workout" --minutes "$workout_minutes"
+focuslock --url "http://localhost:3000/?text=Shower" --minutes "$shower_minutes"
+
+focuslock --app-cmd 'foliate' --minutes "$foliate_minutes"
+focuslock --app-cmd 'obsidian' --minutes "$obsidian_minutes"
 
 printf '%s ran daily\n' "$today" >> "$log_file"
 printf '%s\n' "$today" > "$stamp_file"
