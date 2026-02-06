@@ -9,6 +9,10 @@ today="$(date +%F)"
 
 mkdir -p "$stamp_dir"
 
+if pgrep -x focuslock >/dev/null; then
+    exit 0
+fi
+
 if [[ -f "$stamp_file" ]]; then
     last_run="$(cat "$stamp_file")"
     if [[ "$last_run" == "$today" ]]; then
