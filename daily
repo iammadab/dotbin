@@ -16,8 +16,8 @@ if [[ -f "$stamp_file" ]]; then
     fi
 fi
 
-focuslock --app-cmd 'foliate' --minutes 30
-focuslock --app-cmd 'obsidian' --minutes 30
+focuslock --app-cmd 'foliate' --minutes 60
+focuslock --app-cmd 'obsidian' --minutes 60
 
 printf '%s ran daily\n' "$today" >> "$log_file"
 printf '%s\n' "$today" > "$stamp_file"
