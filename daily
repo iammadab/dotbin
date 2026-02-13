@@ -2,43 +2,56 @@
 
 set -euo pipefail
 
+# State/log locations for daily execution
 stamp_dir="$HOME/.local/share/focuslock"
 stamp_file="$stamp_dir/daily_last_run"
+started_file="$stamp_dir/daily_started"
 log_file="$stamp_dir/daily.log"
 server_log_file="$stamp_dir/daily_server.log"
 today="$(date +%F)"
+
+# Placeholder server project and focus session durations
 project_dir="$HOME/Documents/projects/2026/placeholder"
 workout_minutes=25
 shower_minutes=15
 foliate_minutes=60
 obsidian_minutes=60
 
+# Ensure the state directory exists before reads/writes
 mkdir -p "$stamp_dir"
 
-if pgrep -x focuslock >/dev/null; then
+# Return success if the given stamp file already has today's date
+already_today() { [[ -f "$1" ]] && [[ "$(cat "$1")" == "$today" ]]; }
+
+# Exit early if focuslock is already running or this daily run already started/finished
+if pgrep -x focuslock >/dev/null || already_today "$stamp_file" || already_today "$started_file"; then
     exit 0
 fi
 
-if [[ -f "$stamp_file" ]]; then
-    last_run="$(cat "$stamp_file")"
-    if [[ "$last_run" == "$today" ]]; then
-        exit 0
-    fi
+# Mark this daily run as started to prevent duplicate invocations today
+printf '%s\n' "$today" > "$started_file"
+
+# Start placeholder server only if port 3000 is not already in use
+server_started=0
+if ! ss -ltn "sport = :3000" | grep -q ':3000'; then
+    (
+        cd "$project_dir"
+        cargo run
+    ) >>"$server_log_file" 2>&1 &
+    server_pid=$!
+    server_started=1
 fi
 
-(
-    cd "$project_dir"
-    cargo run
-) >>"$server_log_file" 2>&1 &
-server_pid=$!
+# Ensure we only stop the server if this script started it
 cleanup() {
-    if kill -0 "$server_pid" 2>/dev/null; then
+    if [[ "$server_started" -eq 1 ]] && kill -0 "$server_pid" 2>/dev/null; then
         kill "$server_pid"
         wait "$server_pid" 2>/dev/null || true
     fi
 }
 trap cleanup EXIT INT TERM
 
+# Wait briefly for the server to become available
 for _ in {1..30}; do
     if curl -fs "http://localhost:3000/" >/dev/null; then
         break
@@ -46,16 +59,19 @@ for _ in {1..30}; do
     sleep 0.2
 done
 
+# If the server is still unavailable, log and stop
 if ! curl -fs "http://localhost:3000/" >/dev/null; then
     printf '%s server failed to start\n' "$today" >> "$log_file"
     exit 1
 fi
 
+# Run the daily focus sessions in order
 focuslock --url "http://localhost:3000/?text=Workout" --minutes "$workout_minutes"
 focuslock --url "http://localhost:3000/?text=Shower" --minutes "$shower_minutes"
 
 focuslock --app-cmd 'foliate' --minutes "$foliate_minutes"
 focuslock --app-cmd 'obsidian' --minutes "$obsidian_minutes"
 
+# Mark completion and log success
 printf '%s ran daily\n' "$today" >> "$log_file"
 printf '%s\n' "$today" > "$stamp_file"
